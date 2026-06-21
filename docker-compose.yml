@@ -1,0 +1,15 @@
+services:
+  redis:
+    image: redis:7-alpine
+    container_name: event_booking_redis
+    ports:
+      # Host 6380 -> container 6379 to avoid clashing with a local Redis on 6379.
+      - "6380:6379"
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 5s
+      timeout: 3s
+      retries: 5
+
+volumes:
+  pgdata:

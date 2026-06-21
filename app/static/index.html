@@ -1,0 +1,742 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>EVENTBOOKING</title>
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=Roboto+Mono:ital,wght@0,400;0,500;0,600;0,700;0,800;1,400;1,600&display=swap" rel="stylesheet" />
+<style>
+:root{
+  --paper:#f4f1ea; --paper-2:#ece7db; --paper-3:#e2dccb;
+  --ink:#1a1a1a; --ink-2:#3a3a3a; --ink-3:#6e6e6e; --ink-4:#9c9790;
+  --rule:#cfc8b7; --rule-strong:#1a1a1a;
+  --c-events:#6aa86e; --c-careers:#7aa8cd; --c-bounties:#d88060;
+  --c-community:#a795c8; --c-programs:#d9a85a;
+  --accent:#d88060; --accent-strong:#c56442;
+  --ok:#6aa86e; --warn:#d9a85a; --err:#c56442;
+  --mono:"Roboto Mono","IBM Plex Mono",ui-monospace,Menlo,monospace;
+  --sh-1:2px 2px 0 rgba(26,26,26,.90); --sh-2:3px 3px 0 rgba(26,26,26,.85);
+  --sh-3:4px 4px 0 rgba(26,26,26,.80); --sh-hover:5px 5px 0 rgba(26,26,26,.85);
+}
+*{box-sizing:border-box;}
+html,body{margin:0;padding:0;}
+body{font-family:var(--mono);font-size:14px;line-height:1.55;color:var(--ink);background:var(--paper);
+  background-image:linear-gradient(var(--rule) 1px,transparent 1px),linear-gradient(90deg,var(--rule) 1px,transparent 1px);
+  background-size:28px 28px;background-position:-1px -1px;min-height:100vh;}
+a{color:inherit;text-decoration:none;}
+ul{list-style:none;margin:0;padding:0;}
+h1,h2,h3,h4{margin:0;}
+button,input,select,textarea{font-family:var(--mono);}
+.cx-container{max-width:1180px;margin:0 auto;padding:0 28px;}
+@media(max-width:720px){.cx-container{padding:0 18px;}}
+
+/* pixel dot */
+.px{display:inline-block;width:8px;height:8px;border:1.5px solid var(--ink);background:var(--ink);vertical-align:2px;flex-shrink:0;}
+.px.px-6{width:6px;height:6px;border-width:1px;}.px.px-10{width:10px;height:10px;}
+.px-events{background:var(--c-events);}.px-careers{background:var(--c-careers);}
+.px-bounties{background:var(--c-bounties);}.px-community{background:var(--c-community);}
+.px-programs{background:var(--c-programs);}.px-ink{background:var(--ink);}.px-white{background:var(--paper);}
+
+/* nav */
+.nav-wrap{position:sticky;top:0;z-index:50;background:var(--paper);border-bottom:1.5px solid var(--ink);}
+.nav{display:flex;align-items:center;gap:16px;padding:13px 28px;max-width:1180px;margin:0 auto;}
+.brand{display:inline-flex;align-items:center;gap:8px;font-size:15px;font-weight:800;letter-spacing:.02em;text-transform:uppercase;cursor:pointer;}
+.nav-spacer{flex:1;}
+.nav-role{font-size:11px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:var(--ink-3);}
+@media(max-width:560px){.nav-role{display:none;}}
+
+/* pills */
+.pill{display:inline-flex;align-items:center;gap:7px;padding:5px 10px;border:1.5px solid var(--ink);background:var(--paper);font-size:10px;font-weight:600;letter-spacing:.08em;text-transform:uppercase;box-shadow:var(--sh-1);}
+.pill .dotled{width:8px;height:8px;border:1.5px solid var(--ink);background:var(--ink-4);}
+.pill.ok .dotled{background:var(--ok);}.pill.err .dotled{background:var(--err);}
+
+/* buttons */
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:8px;padding:10px 16px;background:var(--ink);color:var(--paper);border:1.5px solid var(--ink);box-shadow:var(--sh-2);font-size:12px;font-weight:600;letter-spacing:.06em;text-transform:uppercase;cursor:pointer;transition:transform .15s,box-shadow .15s;white-space:nowrap;}
+.btn:hover:not(:disabled){transform:translate(-1px,-1px);box-shadow:var(--sh-hover);}
+.btn:active:not(:disabled){transform:translate(1px,1px);box-shadow:var(--sh-1);}
+.btn:disabled{opacity:.45;cursor:not-allowed;}
+.btn-accent{background:var(--accent);color:var(--paper);}
+.btn-ghost{background:var(--paper);color:var(--ink);}
+.btn-green{background:var(--c-events);color:var(--paper);}
+.btn-blue{background:var(--c-careers);color:var(--paper);}
+.btn-sm{padding:6px 11px;font-size:11px;}
+.btn-xs{padding:4px 8px;font-size:10px;box-shadow:var(--sh-1);}
+.btn-lg{padding:14px 22px;font-size:13px;}
+.btn-block{display:flex;width:100%;}
+
+/* tags */
+.tag{display:inline-flex;align-items:center;gap:6px;padding:4px 8px;border:1.5px solid var(--ink);background:var(--paper);font-size:10px;font-weight:600;letter-spacing:.06em;text-transform:uppercase;line-height:1;}
+.tag-events{background:var(--c-events);color:var(--paper);}
+.tag-careers{background:var(--c-careers);color:var(--paper);}
+.tag-bounties{background:var(--c-bounties);color:var(--paper);}
+.tag-ink{background:var(--ink);color:var(--paper);}
+.muted{color:var(--ink-3);}
+
+/* panel */
+.panel{background:var(--paper);border:1.5px solid var(--ink);box-shadow:var(--sh-2);position:relative;}
+.panel-pad{padding:22px;}
+.panel-head{display:flex;align-items:center;gap:9px;padding:11px 16px;border-bottom:1.5px solid var(--ink);font-size:11px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;background:var(--paper-2);}
+
+/* forms */
+.field{margin-bottom:14px;}
+.field label{display:block;font-size:10px;font-weight:600;letter-spacing:.09em;text-transform:uppercase;color:var(--ink-3);margin-bottom:6px;}
+.input,.select,.textarea{width:100%;padding:10px 12px;border:1.5px solid var(--ink);background:var(--paper);color:var(--ink);font-size:13px;box-shadow:var(--sh-1);transition:box-shadow .12s,transform .12s;border-radius:0;}
+.input:focus,.select:focus,.textarea:focus{outline:none;box-shadow:var(--sh-2);transform:translate(-1px,-1px);}
+.input::placeholder,.textarea::placeholder{color:var(--ink-4);}
+.textarea{resize:vertical;min-height:62px;}
+.row2{display:grid;grid-template-columns:1fr 1fr;gap:12px;}
+@media(max-width:560px){.row2{grid-template-columns:1fr;}}
+
+/* views */
+.view{display:none;}
+.view.active{display:block;}
+
+/* sections */
+.section{padding:40px 0;}
+.section-head{display:flex;align-items:baseline;gap:16px;flex-wrap:wrap;margin-bottom:24px;}
+.section-num{font-size:11px;font-weight:600;letter-spacing:.1em;text-transform:uppercase;background:var(--paper);padding:4px 10px;border:1.5px solid var(--ink);white-space:nowrap;}
+.section-title{font-size:clamp(22px,3vw,32px);font-weight:800;letter-spacing:-.01em;text-transform:uppercase;line-height:1;}
+.section-title em{font-style:normal;color:var(--ink-3);font-weight:600;}
+.section-meta{font-size:11px;color:var(--ink-3);letter-spacing:.04em;text-transform:uppercase;margin-left:auto;}
+
+/* HOME / role chooser */
+.home-hero{padding:56px 0 18px;text-align:center;}
+.home-hero h1{font-size:clamp(36px,5vw,68px);font-weight:800;letter-spacing:-.025em;text-transform:uppercase;line-height:.96;}
+.home-hero h1 em{font-style:normal;color:var(--ink-3);}
+.home-hero p{font-size:15px;color:var(--ink-2);max-width:56ch;margin:18px auto 0;}
+.highlight{background:var(--accent);color:var(--paper);padding:0 .18em;box-shadow:3px 3px 0 var(--ink);display:inline-block;}
+.role-grid{display:grid;grid-template-columns:1fr 1fr;gap:24px;padding:30px 0 10px;}
+@media(max-width:760px){.role-grid{grid-template-columns:1fr;}}
+.role-card{background:var(--paper);border:1.5px solid var(--ink);box-shadow:var(--sh-3);padding:32px 28px;cursor:pointer;transition:transform .15s,box-shadow .15s;position:relative;overflow:hidden;text-align:left;}
+.role-card:hover{transform:translate(-3px,-3px);box-shadow:7px 7px 0 rgba(26,26,26,.85);}
+.role-card .rc-badge{width:46px;height:46px;border:1.5px solid var(--ink);display:flex;align-items:center;justify-content:center;font-size:22px;box-shadow:var(--sh-2);margin-bottom:18px;}
+.role-card.org .rc-badge{background:var(--c-careers);}
+.role-card.cust .rc-badge{background:var(--c-bounties);}
+.role-card h2{font-size:26px;font-weight:800;text-transform:uppercase;letter-spacing:-.01em;}
+.role-card .rc-sub{font-size:11px;font-weight:600;letter-spacing:.1em;text-transform:uppercase;color:var(--ink-3);margin-top:4px;}
+.role-card ul{margin:16px 0 22px;}
+.role-card li{font-size:13px;color:var(--ink-2);padding:5px 0;border-bottom:1.5px dashed var(--rule);display:flex;gap:9px;align-items:center;}
+.role-card li:last-child{border-bottom:none;}
+.role-card .rc-go{display:inline-flex;align-items:center;gap:8px;font-size:12px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;}
+.role-card .corner{position:absolute;top:-1.5px;right:-1.5px;border-top:34px solid var(--ink);border-left:34px solid transparent;}
+
+/* stat strip */
+.kvgrid{display:grid;grid-template-columns:repeat(4,1fr);border-top:1.5px solid var(--ink);border-left:1.5px solid var(--ink);margin-top:26px;}
+.kv{border-right:1.5px solid var(--ink);border-bottom:1.5px solid var(--ink);padding:13px 14px;background:var(--paper);}
+.kv-num{font-size:23px;font-weight:700;letter-spacing:-.015em;display:block;line-height:1;}
+.kv-lbl{font-size:9px;text-transform:uppercase;letter-spacing:.1em;color:var(--ink-3);margin-top:6px;display:flex;align-items:center;gap:5px;}
+@media(max-width:680px){.kvgrid{grid-template-columns:repeat(2,1fr);}}
+
+/* auth */
+.auth-wrap{max-width:480px;margin:0 auto;padding:36px 0;}
+.auth-banner{border:1.5px solid var(--ink);box-shadow:var(--sh-2);padding:16px 18px;margin-bottom:20px;display:flex;align-items:center;gap:12px;}
+.auth-banner.org{background:var(--c-careers);color:var(--paper);}
+.auth-banner.cust{background:var(--c-bounties);color:var(--paper);}
+.auth-banner .ab-ico{width:34px;height:34px;border:1.5px solid var(--ink);background:var(--paper);display:flex;align-items:center;justify-content:center;font-size:17px;}
+.auth-banner h3{font-size:16px;font-weight:800;text-transform:uppercase;letter-spacing:-.01em;}
+.auth-banner small{font-size:10px;letter-spacing:.08em;text-transform:uppercase;opacity:.9;}
+.tabs{display:flex;border:1.5px solid var(--ink);box-shadow:var(--sh-1);margin-bottom:18px;}
+.tab{flex:1;text-align:center;padding:10px;font-size:12px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;cursor:pointer;background:var(--paper);color:var(--ink-3);}
+.tab+.tab{border-left:1.5px solid var(--ink);}
+.tab.active{background:var(--ink);color:var(--paper);}
+.back-link{display:inline-flex;align-items:center;gap:7px;font-size:11px;font-weight:600;letter-spacing:.06em;text-transform:uppercase;color:var(--ink-3);cursor:pointer;margin-bottom:14px;}
+.back-link:hover{color:var(--ink);}
+
+/* dashboards */
+.dash-head{border:1.5px solid var(--ink);box-shadow:var(--sh-2);padding:20px 22px;margin-bottom:26px;display:flex;align-items:center;gap:16px;flex-wrap:wrap;}
+.dash-head.org{background:var(--c-careers);color:var(--paper);}
+.dash-head.cust{background:var(--c-bounties);color:var(--paper);}
+.dash-head .dh-ico{width:42px;height:42px;border:1.5px solid var(--ink);background:var(--paper);display:flex;align-items:center;justify-content:center;font-size:20px;flex-shrink:0;}
+.dash-head h2{font-size:22px;font-weight:800;text-transform:uppercase;letter-spacing:-.01em;}
+.dash-head small{font-size:10px;letter-spacing:.08em;text-transform:uppercase;opacity:.92;}
+.dash-head .dh-right{margin-left:auto;display:flex;gap:8px;flex-wrap:wrap;}
+.grid-side{display:grid;grid-template-columns:360px 1fr;gap:24px;align-items:start;}
+@media(max-width:880px){.grid-side{grid-template-columns:1fr;}}
+
+/* event cards */
+.opp-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:18px;}
+@media(max-width:1000px){.opp-grid{grid-template-columns:repeat(2,1fr);}}
+@media(max-width:600px){.opp-grid{grid-template-columns:1fr;}}
+.grid-side .opp-grid{grid-template-columns:repeat(2,1fr);}
+@media(max-width:1100px){.grid-side .opp-grid{grid-template-columns:1fr;}}
+.opp{background:var(--paper);border:1.5px solid var(--ink);box-shadow:var(--sh-2);padding:20px 18px 16px;display:flex;flex-direction:column;justify-content:space-between;min-height:228px;transition:transform .15s,box-shadow .15s;position:relative;}
+.opp:hover{transform:translate(-2px,-2px);box-shadow:var(--sh-hover);}
+.opp.cancelled{opacity:.6;}
+.opp-top{display:flex;justify-content:space-between;align-items:flex-start;gap:10px;margin-bottom:12px;}
+.opp-id{font-size:10px;font-weight:700;letter-spacing:.12em;text-transform:uppercase;color:var(--ink-3);display:flex;align-items:center;gap:6px;}
+.opp h3{font-size:18px;font-weight:700;letter-spacing:-.01em;text-transform:uppercase;line-height:1.1;margin-bottom:8px;}
+.opp .meta{font-size:11px;color:var(--ink-2);line-height:1.7;}
+.opp .meta b{color:var(--ink);}
+.opp-foot{margin-top:14px;padding-top:11px;border-top:1.5px dashed var(--rule);display:flex;flex-direction:column;gap:9px;}
+.ticket-bar{height:8px;border:1.5px solid var(--ink);background:var(--paper);position:relative;overflow:hidden;}
+.ticket-bar i{position:absolute;left:0;top:0;bottom:0;background:var(--c-events);}
+.foot-actions{display:flex;flex-wrap:wrap;gap:6px;align-items:center;}
+.qty-in{width:52px;padding:4px 6px;border:1.5px solid var(--ink);background:var(--paper);font-size:11px;box-shadow:var(--sh-1);}
+.kvline{display:flex;justify-content:space-between;gap:12px;font-size:12px;padding:7px 0;border-bottom:1.5px dashed var(--rule);}
+.kvline:last-child{border-bottom:none;}
+.empty-note{border:1.5px dashed var(--rule);padding:26px;text-align:center;font-size:12px;color:var(--ink-3);letter-spacing:.04em;text-transform:uppercase;}
+
+/* console (compact, collapsible) */
+.console{position:fixed;right:16px;bottom:16px;width:380px;max-width:calc(100vw - 32px);z-index:80;background:var(--paper);border:1.5px solid var(--ink);box-shadow:var(--sh-3);display:flex;flex-direction:column;max-height:min(52vh,440px);}
+.console.collapsed{max-height:none;}
+.console.collapsed .console-body{display:none;}
+.console-head{display:flex;align-items:center;gap:8px;padding:9px 12px;background:var(--ink);color:var(--paper);font-size:10px;font-weight:700;letter-spacing:.12em;text-transform:uppercase;cursor:pointer;}
+.console-head .grow{flex:1;}
+.console-head button{background:transparent;border:1.5px solid var(--paper);color:var(--paper);font-size:9px;padding:2px 6px;letter-spacing:.08em;text-transform:uppercase;cursor:pointer;}
+.console-body{overflow-y:auto;padding:8px;background:var(--paper-2);}
+.logrow{border:1.5px solid var(--ink);background:var(--paper);box-shadow:var(--sh-1);margin-bottom:7px;}
+.logrow summary{list-style:none;cursor:pointer;display:flex;align-items:center;gap:8px;padding:7px 9px;font-size:11px;}
+.logrow summary::-webkit-details-marker{display:none;}
+.logrow .st{font-size:9px;font-weight:700;padding:2px 6px;border:1.5px solid var(--ink);color:var(--paper);}
+.st-2{background:var(--ok);}.st-3{background:var(--c-careers);}.st-4{background:var(--accent-strong);}.st-5{background:var(--ink);}.st-0{background:var(--err);}
+.logrow .lm{font-weight:700;}.logrow .lp{color:var(--ink-2);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;flex:1;}.logrow .ld{color:var(--ink-3);font-size:9px;}
+.logrow pre{margin:0;padding:9px;border-top:1.5px dashed var(--rule);font-size:11px;line-height:1.5;white-space:pre-wrap;word-break:break-word;max-height:200px;overflow:auto;background:var(--paper);}
+.console-empty{font-size:11px;color:var(--ink-3);text-align:center;padding:16px 8px;letter-spacing:.04em;}
+
+/* toast */
+.toast-wrap{position:fixed;top:16px;left:50%;transform:translateX(-50%);z-index:120;display:flex;flex-direction:column;gap:8px;align-items:center;}
+.toast{border:1.5px solid var(--ink);background:var(--ink);color:var(--paper);box-shadow:var(--sh-3);padding:10px 16px;font-size:11px;font-weight:600;letter-spacing:.06em;text-transform:uppercase;display:flex;align-items:center;gap:9px;animation:tin .15s linear;}
+.toast.ok{background:var(--c-events);}.toast.err{background:var(--accent-strong);}.toast.info{background:var(--c-careers);}
+@keyframes tin{from{transform:translateY(-8px);opacity:0;}to{transform:translateY(0);opacity:1;}}
+
+/* modal */
+.modal-back{position:fixed;inset:0;background:rgba(26,26,26,.45);z-index:100;display:none;align-items:flex-start;justify-content:center;padding:44px 18px;overflow-y:auto;}
+.modal-back.open{display:flex;}
+.modal{width:100%;max-width:520px;background:var(--paper);border:1.5px solid var(--ink);box-shadow:var(--sh-3);}
+.modal-head{display:flex;align-items:center;gap:9px;padding:12px 16px;border-bottom:1.5px solid var(--ink);background:var(--paper-2);font-size:12px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;}
+.modal-head .x{margin-left:auto;cursor:pointer;border:1.5px solid var(--ink);background:var(--paper);width:24px;height:24px;display:flex;align-items:center;justify-content:center;box-shadow:var(--sh-1);}
+.modal-body{padding:18px;}
+.modal-body pre{margin:0;background:var(--paper-2);border:1.5px solid var(--ink);padding:12px;font-size:12px;line-height:1.55;white-space:pre-wrap;word-break:break-word;max-height:48vh;overflow:auto;}
+
+/* footer */
+.foot{border-top:1.5px solid var(--ink);background:var(--paper-2);padding:26px 0;margin-top:40px;}
+.foot-row{display:flex;justify-content:space-between;flex-wrap:wrap;gap:8px;font-size:10px;text-transform:uppercase;letter-spacing:.08em;color:var(--ink-3);}
+.flex{display:flex;}.gap8{gap:8px;}.gap12{gap:12px;}.wrap{flex-wrap:wrap;}.center{align-items:center;}.between{justify-content:space-between;}
+.mt8{margin-top:8px;}.mt14{margin-top:14px;}.mt20{margin-top:20px;}
+</style>
+</head>
+<body>
+
+<!-- NAV -->
+<div class="nav-wrap">
+  <nav class="nav">
+    <span class="brand" id="brand"><span class="px px-6 px-events"></span>EVENT<span style="color:var(--ink-3)">BOOKING</span><span class="px px-6 px-bounties"></span></span>
+    <span class="nav-role" id="nav-role"></span>
+    <span class="nav-spacer"></span>
+    <span class="pill" id="health-pill"><span class="dotled"></span><span id="health-text">…</span></span>
+    <span class="pill" id="session-pill" style="display:none;"><span class="dotled"></span><span id="session-text">GUEST</span></span>
+    <button class="btn btn-sm btn-ghost" id="btn-logout" style="display:none;">LOG OUT</button>
+  </nav>
+</div>
+
+<!-- ============ HOME / ROLE CHOOSER ============ -->
+<section class="view active" id="view-home">
+  <div class="cx-container">
+    <div class="home-hero">
+      <h1>BOOK THE NIGHT.<br/><em>RUN</em> THE SHOW.</h1>
+      <p>An event ticketing platform. Choose how you want to enter — set up and manage your own events as an <span class="highlight">organizer</span>, or discover and book tickets as a <span class="highlight">customer</span>.</p>
+    </div>
+
+    <div class="role-grid">
+      <button class="role-card org" data-role="organizer">
+        <span class="corner"></span>
+        <div class="rc-badge">▲</div>
+        <h2>ORGANIZER</h2>
+        <div class="rc-sub">CREATE &amp; MANAGE EVENTS</div>
+        <ul>
+          <li><span class="px px-6 px-careers"></span>Add new events with tickets &amp; pricing</li>
+          <li><span class="px px-6 px-careers"></span>Edit or cancel your own events</li>
+          <li><span class="px px-6 px-careers"></span>See who booked — the attendee list</li>
+        </ul>
+        <span class="rc-go">ENTER AS ORGANIZER →</span>
+      </button>
+
+      <button class="role-card cust" data-role="customer">
+        <span class="corner"></span>
+        <div class="rc-badge">◆</div>
+        <h2>CUSTOMER</h2>
+        <div class="rc-sub">BROWSE &amp; BOOK TICKETS</div>
+        <ul>
+          <li><span class="px px-6 px-bounties"></span>Browse every active event</li>
+          <li><span class="px px-6 px-bounties"></span>Book tickets in one click</li>
+          <li><span class="px px-6 px-bounties"></span>Track all your bookings</li>
+        </ul>
+        <span class="rc-go">ENTER AS CUSTOMER →</span>
+      </button>
+    </div>
+
+    <div class="kvgrid">
+      <div class="kv"><span class="kv-num" id="h-events">—</span><span class="kv-lbl"><span class="px px-6 px-events"></span>LIVE EVENTS</span></div>
+      <div class="kv"><span class="kv-num">2</span><span class="kv-lbl"><span class="px px-6 px-careers"></span>USER ROLES</span></div>
+      <div class="kv"><span class="kv-num">11</span><span class="kv-lbl"><span class="px px-6 px-bounties"></span>API ENDPOINTS</span></div>
+      <div class="kv"><span class="kv-num" id="h-status">—</span><span class="kv-lbl"><span class="px px-6 px-programs"></span>API STATUS</span></div>
+    </div>
+  </div>
+</section>
+
+<!-- ============ AUTH ============ -->
+<section class="view" id="view-auth">
+  <div class="cx-container">
+    <div class="auth-wrap">
+      <span class="back-link" id="auth-back">← BACK · CHOOSE ROLE</span>
+      <div class="auth-banner" id="auth-banner">
+        <div class="ab-ico" id="auth-ico">▲</div>
+        <div><h3 id="auth-title">ORGANIZER</h3><small id="auth-sub">Create &amp; manage events</small></div>
+      </div>
+
+      <div class="tabs">
+        <div class="tab active" data-tab="login">LOG IN</div>
+        <div class="tab" data-tab="register">SIGN UP</div>
+      </div>
+
+      <!-- LOGIN -->
+      <div class="panel" id="pane-login">
+        <div class="panel-pad">
+          <div class="field"><label>Email</label><input class="input" id="log-email" placeholder="you@example.com" /></div>
+          <div class="field"><label>Password</label><input class="input" id="log-pass" type="password" placeholder="••••••••" /></div>
+          <button class="btn btn-block btn-accent" id="btn-login">LOG IN →</button>
+          <p class="muted mt14" style="font-size:11px;">No account yet? Switch to <b style="cursor:pointer;color:var(--ink);" id="to-register">SIGN UP</b>.</p>
+        </div>
+      </div>
+
+      <!-- REGISTER -->
+      <div class="panel" id="pane-register" style="display:none;">
+        <div class="panel-pad">
+          <div class="field"><label>Full name</label><input class="input" id="reg-name" placeholder="Your name" /></div>
+          <div class="field"><label>Email</label><input class="input" id="reg-email" placeholder="you@example.com" /></div>
+          <div class="field"><label>Password (min 8)</label><input class="input" id="reg-pass" type="password" placeholder="at least 8 characters" /></div>
+          <div class="field"><label>Signing up as</label><input class="input" id="reg-role-label" disabled value="ORGANIZER" /></div>
+          <button class="btn btn-block btn-green" id="btn-register">CREATE ACCOUNT →</button>
+          <p class="muted mt14" style="font-size:11px;">Already have one? Switch to <b style="cursor:pointer;color:var(--ink);" id="to-login">LOG IN</b>.</p>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ============ ORGANIZER DASHBOARD ============ -->
+<section class="view" id="view-organizer">
+  <div class="cx-container section">
+    <div class="dash-head org">
+      <div class="dh-ico">▲</div>
+      <div><h2>ORGANIZER DASHBOARD</h2><small id="org-who">—</small></div>
+      <div class="dh-right">
+        <button class="btn btn-sm btn-ghost" id="org-refresh">REFRESH</button>
+      </div>
+    </div>
+
+    <div class="grid-side">
+      <!-- CREATE -->
+      <div class="panel" style="position:sticky;top:78px;">
+        <div class="panel-head"><span class="px px-6 px-careers"></span>ADD A NEW EVENT</div>
+        <div class="panel-pad">
+          <div class="field"><label>Title</label><input class="input" id="f-title" placeholder="Jazz Night" /></div>
+          <div class="field"><label>Description</label><textarea class="textarea" id="f-desc" placeholder="Optional details"></textarea></div>
+          <div class="field"><label>Venue</label><input class="input" id="f-venue" placeholder="Blue Note" /></div>
+          <div class="field"><label>Start time</label><input class="input" id="f-start" type="datetime-local" /></div>
+          <div class="row2">
+            <div class="field"><label>Total tickets</label><input class="input" id="f-total" type="number" min="1" value="100" /></div>
+            <div class="field"><label>Price (USD)</label><input class="input" id="f-price" type="number" min="0" step="0.01" value="25" /></div>
+          </div>
+          <button class="btn btn-block btn-green" id="btn-create-event"><span class="px px-6 px-white"></span>CREATE EVENT</button>
+        </div>
+      </div>
+
+      <!-- MY EVENTS -->
+      <div>
+        <div class="section-head" style="margin-bottom:16px;">
+          <div class="section-num">§ MY EVENTS</div>
+          <h2 class="section-title" style="font-size:22px;">You're <em>hosting</em></h2>
+          <div class="section-meta" id="org-count">0 EVENTS</div>
+        </div>
+        <div class="opp-grid" id="org-grid"></div>
+        <div class="empty-note" id="org-empty">No events yet — create your first one on the left.</div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ============ CUSTOMER DASHBOARD ============ -->
+<section class="view" id="view-customer">
+  <div class="cx-container section">
+    <div class="dash-head cust">
+      <div class="dh-ico">◆</div>
+      <div><h2>DISCOVER EVENTS</h2><small id="cust-who">—</small></div>
+      <div class="dh-right">
+        <input class="input" id="cust-search" placeholder="SEARCH TITLE…" style="max-width:200px;" />
+        <button class="btn btn-sm btn-ghost" id="cust-refresh">REFRESH</button>
+      </div>
+    </div>
+
+    <div class="grid-side">
+      <!-- MY BOOKINGS -->
+      <div class="panel" style="position:sticky;top:78px;">
+        <div class="panel-head"><span class="px px-6 px-bounties"></span>MY BOOKINGS</div>
+        <div class="panel-pad">
+          <button class="btn btn-block btn-sm btn-ghost" id="btn-my-bookings">LOAD MY BOOKINGS</button>
+          <div id="my-bookings" class="mt14"><div class="empty-note">No bookings loaded yet.</div></div>
+        </div>
+      </div>
+
+      <!-- EVENTS GRID -->
+      <div>
+        <div class="section-head" style="margin-bottom:16px;">
+          <div class="section-num">§ ON SALE</div>
+          <h2 class="section-title" style="font-size:22px;">Active <em>events</em></h2>
+          <div class="section-meta" id="cust-count">0 EVENTS</div>
+        </div>
+        <div class="opp-grid" id="cust-grid"></div>
+        <div class="empty-note" id="cust-empty">No active events right now. Check back soon.</div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- FOOTER -->
+<footer class="foot">
+  <div class="cx-container foot-row">
+    <span>EVENT BOOKING SYSTEM · FASTAPI + POSTGRESQL + REDIS</span>
+    <span><a id="docs-link" href="#" target="_blank">SWAGGER /docs →</a> · PAPER-BRUTALIST UI</span>
+  </div>
+</footer>
+
+<!-- CONSOLE -->
+<div class="console collapsed" id="console">
+  <div class="console-head" id="console-head">
+    <span class="px px-6 px-bounties"></span><span class="grow">API LOG · <span id="console-count">0</span></span>
+    <button id="btn-clear-log">CLEAR</button>
+    <button id="btn-toggle-log">SHOW</button>
+  </div>
+  <div class="console-body" id="console-body"><div class="console-empty">Your API calls stream here.</div></div>
+</div>
+
+<!-- MODAL -->
+<div class="modal-back" id="modal-back">
+  <div class="modal">
+    <div class="modal-head"><span class="px px-6 px-events"></span><span id="modal-title">MODAL</span><span class="x" id="modal-x">✕</span></div>
+    <div class="modal-body" id="modal-body"></div>
+  </div>
+</div>
+
+<div class="toast-wrap" id="toast-wrap"></div>
+
+<script>
+const $ = (s,r=document)=>r.querySelector(s);
+const $$ = (s,r=document)=>Array.from(r.querySelectorAll(s));
+const esc = s => String(s==null?'':s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+
+function pickDefaultBase(){
+  const stored = localStorage.getItem('eb_base');
+  if(stored && /^https?:/i.test(stored)) return stored;
+  if(location.protocol === 'file:') return 'http://localhost:8000';
+  return window.location.origin;
+}
+
+const state = {
+  base: pickDefaultBase(),
+  token: localStorage.getItem('eb_token') || null,
+  user: null,             // {id, role, email, exp}
+  intendedRole: 'organizer',
+  calls: 0,
+};
+
+/* ---------- JWT ---------- */
+function decodeJwt(t){ try{ const p=t.split('.')[1].replace(/-/g,'+').replace(/_/g,'/'); return JSON.parse(decodeURIComponent(escape(atob(p)))); }catch(e){ return null; } }
+
+/* ---------- API ---------- */
+async function api(method, path, opts={}){
+  const url = (state.base||'').replace(/\/$/,'') + path;
+  const headers = {}; let body;
+  if(opts.form){ headers['Content-Type']='application/x-www-form-urlencoded'; body=new URLSearchParams(opts.form).toString(); }
+  else if(opts.body!==undefined){ headers['Content-Type']='application/json'; body=JSON.stringify(opts.body); }
+  if(opts.auth!==false && state.token){ headers['Authorization']='Bearer '+state.token; }
+  const t0=performance.now(); let res,data,status=0,ok=false;
+  try{
+    res=await fetch(url,{method,headers,body}); status=res.status; ok=res.ok;
+    const txt=await res.text(); try{ data=txt?JSON.parse(txt):null; }catch(_){ data=txt; }
+  }catch(err){ logReq(method,path,0,{error:String(err.message||err)},Math.round(performance.now()-t0)); toast('NETWORK ERROR — IS THE SERVER RUNNING?','err'); throw err; }
+  logReq(method,path,status,data,Math.round(performance.now()-t0));
+  if(!ok){ let msg='HTTP '+status; if(data&&data.detail){ msg=typeof data.detail==='string'?data.detail:JSON.stringify(data.detail);} const e=new Error(msg); e.status=status; e.data=data; throw e; }
+  return data;
+}
+
+/* ---------- console ---------- */
+function logReq(method,path,status,data,dur){
+  state.calls++;
+  const body=$('#console-body'); $('.console-empty',body)?.remove();
+  const cls = status===0?'st-0':('st-'+String(status)[0]);
+  const det=document.createElement('details'); det.className='logrow';
+  det.innerHTML=`<summary><span class="st ${cls}">${status||'ERR'}</span><span class="lm">${esc(method)}</span><span class="lp">${esc(path)}</span><span class="ld">${dur}ms</span></summary><pre>${esc(JSON.stringify(data,null,2))}</pre>`;
+  body.prepend(det); $('#console-count').textContent=state.calls;
+  while(body.querySelectorAll('.logrow').length>30){ body.querySelector('.logrow:last-child').remove(); }
+}
+
+/* ---------- toast ---------- */
+function toast(msg,type='info'){
+  const el=document.createElement('div'); el.className='toast '+type;
+  el.innerHTML=`<span class="px px-6 px-white"></span>${esc(msg)}`;
+  $('#toast-wrap').appendChild(el);
+  setTimeout(()=>{ el.style.opacity='0'; el.style.transition='opacity .3s'; setTimeout(()=>el.remove(),300); },2600);
+}
+
+/* ---------- modal ---------- */
+function openModal(title,html){ $('#modal-title').textContent=title; $('#modal-body').innerHTML=html; $('#modal-back').classList.add('open'); }
+function closeModal(){ $('#modal-back').classList.remove('open'); }
+$('#modal-x').onclick=closeModal;
+$('#modal-back').onclick=e=>{ if(e.target===$('#modal-back')) closeModal(); };
+
+/* ---------- views ---------- */
+function showView(name){
+  $$('.view').forEach(v=>v.classList.remove('active'));
+  $('#view-'+name).classList.add('active');
+  window.scrollTo({top:0,behavior:'smooth'});
+}
+
+/* ---------- session ---------- */
+function setSession(token,email){
+  state.token=token;
+  if(token){ const p=decodeJwt(token)||{}; state.user={id:p.sub,role:p.role,email:email||state.user?.email||'—',exp:p.exp}; localStorage.setItem('eb_token',token); }
+  else { state.user=null; localStorage.removeItem('eb_token'); }
+  renderSession();
+}
+function renderSession(){
+  const u=state.user, sp=$('#session-pill'), st=$('#session-text');
+  if(u){
+    sp.style.display=''; sp.classList.add('ok'); st.textContent=(u.role||'').toUpperCase()+' · '+(u.email||'');
+    $('#btn-logout').style.display=''; $('#nav-role').textContent=(u.role||'').toUpperCase()+' MODE';
+  } else {
+    sp.style.display='none'; $('#btn-logout').style.display='none'; $('#nav-role').textContent='';
+  }
+}
+function logout(){ setSession(null); toast('SIGNED OUT','info'); showView('home'); loadHomeStats(); }
+
+/* ---------- health ---------- */
+async function checkHealth(){
+  const pill=$('#health-pill'), txt=$('#health-text');
+  try{ const r=await api('GET','/health',{auth:false}); pill.classList.add('ok'); pill.classList.remove('err'); txt.textContent='API '+(r.status||'OK').toUpperCase(); $('#h-status').textContent='ONLINE'; }
+  catch(e){ pill.classList.add('err'); pill.classList.remove('ok'); txt.textContent='API DOWN'; $('#h-status').textContent='OFFLINE'; }
+}
+
+/* ---------- shared event helpers ---------- */
+function ticketPct(ev){ return ev.total_tickets?Math.round(100*ev.available_tickets/ev.total_tickets):0; }
+function fmtDate(iso){ if(!iso) return '—'; const d=new Date(iso); return isNaN(d)?iso:d.toLocaleString(undefined,{year:'numeric',month:'short',day:'2-digit',hour:'2-digit',minute:'2-digit'}); }
+function toIso(local){ if(!local) return null; const v=local.length===16?local+':00':local; return v+'Z'; }
+
+function eventCard(ev, mode){
+  const pct=ticketPct(ev); const cancelled=ev.status!=='active';
+  const tagCls=cancelled?'tag-ink':(pct<=0?'tag-bounties':'tag-events');
+  let actions='';
+  if(mode==='customer'){
+    actions += `<button class="btn btn-xs btn-ghost" data-act="view" data-id="${ev.id}">DETAILS</button>`;
+    if(!cancelled){
+      actions += `<input class="qty-in" type="number" min="1" value="1" id="qty-${ev.id}" />`;
+      actions += `<button class="btn btn-xs btn-accent" data-act="book" data-id="${ev.id}">BOOK</button>`;
+    } else { actions += `<span class="tag tag-ink">CANCELLED</span>`; }
+  } else {
+    actions += `<button class="btn btn-xs btn-blue" data-act="edit" data-id="${ev.id}">EDIT</button>`;
+    actions += `<button class="btn btn-xs btn-green" data-act="attendees" data-id="${ev.id}">ATTENDEES</button>`;
+    if(!cancelled) actions += `<button class="btn btn-xs btn-ghost" data-act="cancel" data-id="${ev.id}">CANCEL</button>`;
+  }
+  return `<article class="opp ${cancelled?'cancelled':''}">
+    <div>
+      <div class="opp-top">
+        <div class="opp-id"><span class="px px-6 px-events"></span>EV·${String(ev.id).padStart(2,'0')}</div>
+        <span class="tag ${tagCls}">${cancelled?'CANCELLED':(pct<=0?'SOLD OUT':'ACTIVE')}</span>
+      </div>
+      <h3>${esc(ev.title)}</h3>
+      <div class="meta">
+        <div><span class="muted">VENUE </span><b>${esc(ev.venue)}</b></div>
+        <div><span class="muted">WHEN </span>${esc(fmtDate(ev.start_time))}</div>
+        <div><span class="muted">PRICE </span><b>$${Number(ev.price).toFixed(2)}</b></div>
+      </div>
+    </div>
+    <div class="opp-foot">
+      <div class="ticket-bar"><i style="width:${pct}%"></i></div>
+      <div class="flex between" style="font-size:10px;letter-spacing:.06em;text-transform:uppercase;color:var(--ink-3);">
+        <span><b style="color:var(--ink)">${ev.available_tickets}</b> / ${ev.total_tickets} LEFT</span><span>${pct}%</span>
+      </div>
+      <div class="foot-actions">${actions}</div>
+    </div>
+  </article>`;
+}
+
+function wireCards(scope){
+  $$(scope+' [data-act]').forEach(btn=>{
+    btn.onclick=()=>{
+      const id=btn.dataset.id, act=btn.dataset.act;
+      if(act==='view') viewEvent(id);
+      else if(act==='book') bookEvent(id);
+      else if(act==='edit') editEventModal(id);
+      else if(act==='cancel') cancelEvent(id);
+      else if(act==='attendees') attendeesModal(id);
+    };
+  });
+}
+
+async function viewEvent(id){ try{ const ev=await api('GET','/events/'+id); openModal('EVENT #'+id, `<pre>${esc(JSON.stringify(ev,null,2))}</pre>`); }catch(e){ toast(e.message,'err'); } }
+
+/* ---------- CUSTOMER ---------- */
+async function loadCustomer(){
+  $('#cust-who').textContent=(state.user?.email||'')+' · CUSTOMER';
+  const params=new URLSearchParams(); params.set('limit','50');
+  const s=$('#cust-search').value.trim(); if(s) params.set('search',s);
+  try{
+    const list=await api('GET','/events?'+params.toString());
+    $('#cust-count').textContent=list.length+' EVENT'+(list.length===1?'':'S');
+    const grid=$('#cust-grid'), empty=$('#cust-empty');
+    if(!list.length){ grid.innerHTML=''; empty.style.display=''; }
+    else { empty.style.display='none'; grid.innerHTML=list.map(ev=>eventCard(ev,'customer')).join(''); wireCards('#cust-grid'); }
+  }catch(e){ toast(e.message,'err'); }
+}
+async function bookEvent(id){
+  const qty=parseInt($('#qty-'+id)?.value||'1',10);
+  if(!(qty>0)){ toast('QUANTITY MUST BE > 0','err'); return; }
+  try{ const b=await api('POST','/bookings',{body:{event_id:Number(id),quantity:qty}}); toast('BOOKED #'+b.id+' · $'+Number(b.total_price).toFixed(2),'ok'); loadCustomer(); loadMyBookings(); }
+  catch(e){ toast(e.message,'err'); }
+}
+function bookingRows(list){
+  if(!list||!list.length) return `<div class="empty-note">No bookings yet.</div>`;
+  return list.map(b=>`<div class="kvline"><span><b>#${b.id}</b> · EV ${b.event_id}</span><span>${b.quantity}× · $${Number(b.total_price).toFixed(2)} · <span class="tag ${b.status==='confirmed'?'tag-events':'tag-ink'}" style="font-size:8px;padding:2px 5px;">${esc(b.status)}</span></span></div>`).join('');
+}
+async function loadMyBookings(){ try{ const list=await api('GET','/bookings/me'); $('#my-bookings').innerHTML=bookingRows(list); }catch(e){ toast(e.message,'err'); } }
+
+/* ---------- ORGANIZER ---------- */
+async function loadOrganizer(){
+  $('#org-who').textContent=(state.user?.email||'')+' · ORGANIZER';
+  try{
+    const list=await api('GET','/events?limit=50');
+    const mine=list.filter(ev=>String(ev.organizer_id)===String(state.user.id));
+    $('#org-count').textContent=mine.length+' EVENT'+(mine.length===1?'':'S');
+    const grid=$('#org-grid'), empty=$('#org-empty');
+    if(!mine.length){ grid.innerHTML=''; empty.style.display=''; }
+    else { empty.style.display='none'; grid.innerHTML=mine.map(ev=>eventCard(ev,'organizer')).join(''); wireCards('#org-grid'); }
+  }catch(e){ toast(e.message,'err'); }
+}
+async function createEvent(){
+  const d={ title:$('#f-title').value.trim(), description:$('#f-desc').value.trim()||null, venue:$('#f-venue').value.trim(), start_time:toIso($('#f-start').value), total_tickets:parseInt($('#f-total').value,10), price:parseFloat($('#f-price').value) };
+  if(!d.title||!d.venue||!d.start_time||!(d.total_tickets>0)){ toast('FILL TITLE, VENUE, TIME & TICKETS','err'); return; }
+  try{ const ev=await api('POST','/events',{body:d}); toast('EVENT #'+ev.id+' CREATED','ok'); $('#f-title').value=''; $('#f-desc').value=''; $('#f-venue').value=''; $('#f-start').value=''; loadOrganizer(); }
+  catch(e){ toast(e.message,'err'); }
+}
+async function editEventModal(id){
+  try{
+    const ev=await api('GET','/events/'+id);
+    const dt=ev.start_time?new Date(ev.start_time):null;
+    const dtLocal=dt&&!isNaN(dt)?new Date(dt.getTime()-dt.getTimezoneOffset()*60000).toISOString().slice(0,16):'';
+    openModal('EDIT EVENT #'+id, `
+      <div class="field"><label>Title</label><input class="input" id="e-title" value="${esc(ev.title)}" /></div>
+      <div class="field"><label>Description</label><textarea class="textarea" id="e-desc">${esc(ev.description||'')}</textarea></div>
+      <div class="field"><label>Venue</label><input class="input" id="e-venue" value="${esc(ev.venue)}" /></div>
+      <div class="field"><label>Start time</label><input class="input" id="e-start" type="datetime-local" value="${dtLocal}" /></div>
+      <div class="row2">
+        <div class="field"><label>Total tickets</label><input class="input" id="e-total" type="number" min="1" value="${esc(ev.total_tickets)}" /></div>
+        <div class="field"><label>Price</label><input class="input" id="e-price" type="number" min="0" step="0.01" value="${esc(ev.price)}" /></div>
+      </div>
+      <button class="btn btn-block btn-green" id="e-save">SAVE CHANGES</button>
+      <p class="muted mt8" style="font-size:10px;">PUT /events/${id} → notifies everyone who booked.</p>`);
+    $('#e-save').onclick=async()=>{
+      const body={ title:$('#e-title').value.trim(), description:$('#e-desc').value.trim()||null, venue:$('#e-venue').value.trim(), start_time:toIso($('#e-start').value), total_tickets:parseInt($('#e-total').value,10), price:parseFloat($('#e-price').value) };
+      try{ await api('PUT','/events/'+id,{body}); toast('EVENT #'+id+' UPDATED · ATTENDEES NOTIFIED','ok'); closeModal(); loadOrganizer(); }
+      catch(e){ toast(e.message,'err'); }
+    };
+  }catch(e){ toast(e.message,'err'); }
+}
+async function cancelEvent(id){
+  openModal('CANCEL EVENT #'+id, `<p style="font-size:13px;color:var(--ink-2);">Soft-cancel event <b>#${id}</b>? It drops from listings and all attendees get a notification.</p>
+    <div class="flex gap8 mt14"><button class="btn btn-accent" id="c-yes">YES, CANCEL</button><button class="btn btn-ghost" id="c-no">KEEP</button></div>`);
+  $('#c-no').onclick=closeModal;
+  $('#c-yes').onclick=async()=>{ try{ await api('DELETE','/events/'+id); toast('EVENT #'+id+' CANCELLED','ok'); closeModal(); loadOrganizer(); }catch(e){ toast(e.message,'err'); } };
+}
+async function attendeesModal(id){
+  try{
+    const list=await api('GET','/events/'+id+'/bookings');
+    const rows = list.length ? list.map(b=>`<div class="kvline"><span>BOOKING <b>#${b.id}</b> · CUST ${b.customer_id}</span><span>${b.quantity}× · $${Number(b.total_price).toFixed(2)}</span></div>`).join('') : `<div class="empty-note">No bookings for this event yet.</div>`;
+    openModal('ATTENDEES · EVENT #'+id, `<div class="muted" style="font-size:10px;letter-spacing:.08em;text-transform:uppercase;margin-bottom:8px;">${list.length} BOOKING(S)</div>${rows}`);
+  }catch(e){ toast(e.message,'err'); }
+}
+
+/* ---------- auth flow ---------- */
+function openAuth(role){
+  state.intendedRole=role;
+  const org=role==='organizer';
+  $('#auth-banner').className='auth-banner '+(org?'org':'cust');
+  $('#auth-ico').textContent=org?'▲':'◆';
+  $('#auth-title').textContent=org?'ORGANIZER':'CUSTOMER';
+  $('#auth-sub').textContent=org?'Create & manage events':'Browse & book tickets';
+  $('#reg-role-label').value=org?'ORGANIZER':'CUSTOMER';
+  switchTab('login');
+  showView('auth');
+}
+function switchTab(which){
+  $$('.tab').forEach(t=>t.classList.toggle('active',t.dataset.tab===which));
+  $('#pane-login').style.display = which==='login'?'':'none';
+  $('#pane-register').style.display = which==='register'?'':'none';
+}
+function routeByRole(){
+  if(!state.user) return showView('home');
+  if(state.user.role==='organizer'){ showView('organizer'); loadOrganizer(); }
+  else { showView('customer'); loadCustomer(); loadMyBookings(); }
+}
+
+/* ---------- home stats ---------- */
+async function loadHomeStats(){
+  await checkHealth();
+  if(state.token){ try{ const list=await api('GET','/events?limit=50'); $('#h-events').textContent=list.length; }catch(_){ $('#h-events').textContent='—'; } }
+  else $('#h-events').textContent='—';
+}
+
+/* ---------- wire up ---------- */
+$$('.role-card').forEach(c=> c.onclick=()=>openAuth(c.dataset.role));
+$('#auth-back').onclick=()=>{ showView('home'); loadHomeStats(); };
+$('#brand').onclick=()=>{ if(state.user) routeByRole(); else { showView('home'); loadHomeStats(); } };
+$$('.tab').forEach(t=> t.onclick=()=>switchTab(t.dataset.tab));
+$('#to-register').onclick=()=>switchTab('register');
+$('#to-login').onclick=()=>switchTab('login');
+$('#btn-logout').onclick=logout;
+
+$('#btn-login').onclick=async()=>{
+  const email=$('#log-email').value.trim(), pass=$('#log-pass').value;
+  if(!email||!pass){ toast('ENTER EMAIL & PASSWORD','err'); return; }
+  try{
+    const r=await api('POST','/auth/login',{form:{username:email,password:pass},auth:false});
+    setSession(r.access_token,email);
+    if(state.intendedRole && state.user.role!==state.intendedRole) toast('SIGNED IN AS '+state.user.role.toUpperCase()+' (ACCOUNT ROLE)','info');
+    else toast('WELCOME BACK · '+state.user.role.toUpperCase(),'ok');
+    routeByRole();
+  }catch(e){ toast(e.message,'err'); }
+};
+$('#btn-register').onclick=async()=>{
+  const body={ full_name:$('#reg-name').value.trim(), email:$('#reg-email').value.trim(), password:$('#reg-pass').value, role:state.intendedRole };
+  if(!body.full_name||!body.email||body.password.length<8){ toast('NAME, EMAIL & 8+ CHAR PASSWORD','err'); return; }
+  try{
+    await api('POST','/auth/register',{body,auth:false});
+    const r=await api('POST','/auth/login',{form:{username:body.email,password:body.password},auth:false});
+    setSession(r.access_token,body.email);
+    toast('ACCOUNT CREATED · '+state.user.role.toUpperCase(),'ok');
+    routeByRole();
+  }catch(e){ toast(e.message,'err'); }
+};
+
+$('#org-refresh').onclick=loadOrganizer;
+$('#btn-create-event').onclick=createEvent;
+$('#cust-refresh').onclick=loadCustomer;
+$('#cust-search').addEventListener('keydown',e=>{ if(e.key==='Enter') loadCustomer(); });
+$('#btn-my-bookings').onclick=loadMyBookings;
+
+$('#console-head').onclick=e=>{ if(e.target.id==='btn-clear-log'||e.target.id==='btn-toggle-log') return; toggleConsole(); };
+$('#btn-toggle-log').onclick=toggleConsole;
+function toggleConsole(){ const c=$('#console'); c.classList.toggle('collapsed'); $('#btn-toggle-log').textContent=c.classList.contains('collapsed')?'SHOW':'HIDE'; }
+$('#btn-clear-log').onclick=()=>{ $('#console-body').innerHTML='<div class="console-empty">Cleared.</div>'; };
+
+/* ---------- boot ---------- */
+(function init(){
+  $('#docs-link').href=(state.base||'').replace(/\/$/,'')+'/docs';
+  if(state.token){ const p=decodeJwt(state.token); if(p && (!p.exp || p.exp*1000>Date.now())){ setSession(state.token); routeByRole(); } else { setSession(null); showView('home'); } }
+  else { renderSession(); showView('home'); }
+  loadHomeStats();
+})();
+</script>
+</body>
+</html>

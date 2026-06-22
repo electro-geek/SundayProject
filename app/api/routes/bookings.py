@@ -5,7 +5,6 @@ from sqlalchemy import select
 from sqlalchemy.orm import Session
 
 from app.api.deps import require_role
-from app.core.cache import invalidate_event_caches
 from app.db.session import get_db
 from app.models.booking import Booking
 from app.models.event import Event, EventStatus
@@ -67,9 +66,6 @@ def create_booking(
     db.add(booking)
     db.commit()
     db.refresh(booking)
-
-    # available_tickets changed -> invalidate cached listings + this event detail.
-    invalidate_event_caches(event.id)
 
     # Background Task 1: send booking confirmation email (simulated).
     background_tasks.add_task(send_booking_confirmation, booking.id)

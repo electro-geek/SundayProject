@@ -12,7 +12,6 @@ TEST_DB_URL = os.environ.get(
 )
 os.environ["DATABASE_URL"] = TEST_DB_URL
 
-from app.core import cache as cache_module  # noqa: E402
 from app.db.base import Base  # noqa: E402
 from app.db.session import get_db  # noqa: E402
 from app.main import app  # noqa: E402
@@ -23,14 +22,11 @@ TestingSessionLocal = sessionmaker(bind=engine, autoflush=False, autocommit=Fals
 
 @pytest.fixture(autouse=True)
 def _setup_db():
-    """Fresh schema + clean cache for every test (cache may persist across tests)."""
+    """Fresh schema for every test."""
     Base.metadata.drop_all(bind=engine)
     Base.metadata.create_all(bind=engine)
-    cache_module.reset_client()
-    cache_module.cache_delete_pattern("event*")
     yield
     Base.metadata.drop_all(bind=engine)
-    cache_module.cache_delete_pattern("event*")
 
 
 def _override_get_db():

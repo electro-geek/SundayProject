@@ -38,7 +38,6 @@ Two asynchronous **background tasks** are triggered by the system:
 | ORM | **SQLAlchemy 2.0** (typed `Mapped[]` models) |
 | Migrations | **Alembic** |
 | Database | **PostgreSQL 16** (via `psycopg` 3) |
-| Cache | **Redis 7** (read-through cache for event browsing) |
 | Validation / settings | **Pydantic v2** + pydantic-settings |
 | Auth | **JWT** (`python-jose`) + **bcrypt** password hashing (`passlib`) |
 | Background jobs | **FastAPI `BackgroundTasks`** |
@@ -57,17 +56,14 @@ Two asynchronous **background tasks** are triggered by the system:
                  │   deps.py: get_current_user / require_role │  ◄── JWT decode + RBAC
                  │      │              │              │       │
                  │      ▼              ▼              ▼       │
-                 │   GET /events ─► Redis cache (read-through) │  ◄── browse hits cache first
-                 │      │              │              │       │
-                 │      ▼              ▼              ▼       │
                  │            SQLAlchemy ORM session          │
                  │                    │                       │
                  │       BackgroundTasks.add_task(...)        │
-                 └──────────┬───────────┬───────────┬────────┘
-                            ▼           ▼           ▼
-                    PostgreSQL    Redis (cache;   tasks/notifications.py
-                     (events)     invalidated     (own short-lived DB session)
-                                  on writes)        [EMAIL] / [NOTIFY] logs
+                 └──────────┬───────────────────────┬────────┘
+                            ▼                        ▼
+                    PostgreSQL              tasks/notifications.py
+                     (events)               (own short-lived DB session)
+                                            [EMAIL] / [NOTIFY] logs
 ```
 
 ### Project structure
@@ -76,9 +72,8 @@ Two asynchronous **background tasks** are triggered by the system:
 app/
   main.py                 # FastAPI app, logging, router wiring, /health
   core/
-    config.py             # Settings from env/.env (DB URL, JWT, Redis)
+    config.py             # Settings from env/.env (DB URL, JWT)
     security.py           # bcrypt hashing + JWT encode/decode
-    cache.py              # Redis cache helpers + graceful fallback
   db/
     base.py               # DeclarativeBase
     session.py            # engine, SessionLocal, get_db dependency
@@ -91,7 +86,7 @@ app/
     notifications.py      # the two background tasks
 alembic/                  # migration environment + versions
 tests/                    # pytest suite
-docker-compose.yml        # PostgreSQL + Redis services
+docker-compose.yml        # PostgreSQL service
 .env.example              # configuration template
 ```
 
@@ -145,16 +140,14 @@ Interactive docs (Swagger UI) are available at **`/docs`** when the server runs.
 
 ### Prerequisites
 - Python 3.10+
-- Docker + Docker Compose (for PostgreSQL + Redis)
+- Docker + Docker Compose (for PostgreSQL)
 
-### 1. Start PostgreSQL + Redis
+### 1. Start PostgreSQL
 ```bash
 docker compose up -d
 ```
-> Host ports are remapped to avoid clashing with services you may already run:
-> **Postgres 5433 → 5432** and **Redis 6380 → 6379**. The URLs in `.env.example`
-> match these. Redis is optional — if it's down or `REDIS_URL` is blank, the API
-> still works and simply reads from the database (see design decisions).
+> The host port is remapped to avoid clashing with a Postgres you may already run:
+> **Postgres 5433 → 5432**. The URL in `.env.example` matches this.
 
 ### 2. Configure environment
 ```bash
@@ -229,19 +222,15 @@ The suite uses a separate `events_test` database on the same Postgres instance.
 
 ```bash
 # one-time: create the test database
-docker exec event_booking_db psql -U postgres -c "CREATE DATABASE events_test;"
+docker exec event_booking_postgres psql -U postgres -c "CREATE DATABASE events_test;"
 
 source .venv/bin/activate
 pytest -q
 ```
 
 Coverage: registration/login, JWT auth, RBAC (organizer-only / customer-only / owner-only),
-event CRUD + search, booking with ticket decrement, overselling rejection, assertions that
-**both background tasks are enqueued** (via mocking), and the Redis cache (population,
-invalidation on writes, and graceful fallback when Redis is unavailable).
-
-> The cache integration tests automatically **skip** if Redis isn't reachable, so the suite
-> passes with or without Redis running. The graceful-fallback test always runs.
+event CRUD + search, booking with ticket decrement, overselling rejection, and assertions that
+**both background tasks are enqueued** (via mocking).
 
 ---
 
@@ -265,35 +254,14 @@ reusable FastAPI dependency that returns **403** when the role doesn't match. Ow
 checks (an organizer may only modify their own events) are enforced separately in the route
 via `_get_owned_event`. This keeps authz declarative and close to each endpoint.
 
-**FastAPI `BackgroundTasks` for async work (vs Celery/Redis).**
+**FastAPI `BackgroundTasks` for async work (vs a broker-backed queue).**
 The assignment only requires a simulated side effect (a log) that runs after the response.
 FastAPI's built-in `BackgroundTasks` does exactly this with **zero extra infrastructure** —
 no broker, no worker process — which keeps the project trivial to clone, run, and demo.
-Celery/Redis would add operational overhead with no benefit at this scope. The code is
+A Celery/broker setup would add operational overhead with no benefit at this scope. The code is
 structured so the task functions could later be swapped to `.delay()` calls behind a queue
 with minimal change. *(Trade-off: BackgroundTasks run in the same process and aren't durable
 across restarts — acceptable for notifications; a real email pipeline would use a broker.)*
-
-**Redis read-through cache for event browsing.**
-`GET /events` and `GET /events/{id}` are the read-heavy paths — every customer repeatedly
-hits the same popular events. These responses are cached in Redis (`app/core/cache.py`) with
-a short TTL (`CACHE_TTL_SECONDS`, default 60s). Cache keys encode the query params
-(`events:list:skip=…:limit=…:search=…`, `event:{id}`). The cache is **invalidated on every
-write** that changes what a reader would see — create, update, cancel, *and booking* (since
-`available_tickets` appears in the payload) — via `invalidate_event_caches()`. This keeps
-the cache correct immediately rather than relying on TTL expiry alone.
-Design choices and trade-offs:
-- *Graceful degradation:* if Redis is unconfigured, unreachable, or errors mid-request,
-  every cache helper becomes a no-op / miss and the endpoint transparently falls back to the
-  database. The API never fails because of the cache.
-- *Circuit breaker:* after a Redis error the cache is bypassed for a 30s cooldown, so a dead
-  Redis doesn't add connection-timeout latency to every request.
-- *Wholesale list invalidation:* all `events:list:*` keys are dropped on any write. Listings
-  are cheap to recompute and correctness matters more than avoiding a few extra misses.
-- *Why caching here but not for ticket counts:* the cache is only ever a copy of read data;
-  the **source of truth stays in Postgres**. Ticket inventory is deliberately *not* moved into
-  Redis, because that would create a dual-source-of-truth consistency problem on the critical
-  booking path (see anti-oversell below). Caching reads is low-risk; caching the counter is not.
 
 **Background tasks open their own DB session.**
 Tasks run *after* the request completes, so the request-scoped session is already closed.

@@ -1,12 +1,18 @@
 services:
-  redis:
-    image: redis:7-alpine
-    container_name: event_booking_redis
+  postgres:
+    image: postgres:16-alpine
+    container_name: event_booking_postgres
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+      POSTGRES_DB: events
     ports:
-      # Host 6380 -> container 6379 to avoid clashing with a local Redis on 6379.
-      - "6380:6379"
+      # Host 5433 -> container 5432 to avoid clashing with a local Postgres on 5432.
+      - "5433:5432"
+    volumes:
+      - pgdata:/var/lib/postgresql/data
     healthcheck:
-      test: ["CMD", "redis-cli", "ping"]
+      test: ["CMD-SHELL", "pg_isready -U postgres"]
       interval: 5s
       timeout: 3s
       retries: 5

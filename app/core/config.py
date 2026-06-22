@@ -12,10 +12,6 @@ class Settings(BaseSettings):
     JWT_ALGORITHM: str = "HS256"
     ACCESS_TOKEN_EXPIRE_MINUTES: int = 60
 
-    # Redis cache. Empty string disables caching (endpoints fall back to the DB).
-    REDIS_URL: str = "redis://localhost:6380/0"
-    CACHE_TTL_SECONDS: int = 60
-
     model_config = SettingsConfigDict(env_file=".env", extra="ignore")
 
 

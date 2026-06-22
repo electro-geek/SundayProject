@@ -16,8 +16,7 @@ API_DESCRIPTION = """
 ## Event Booking System API
 
 A backend for an event‑ticketing platform with **role‑based access control**,
-**JWT authentication**, **PostgreSQL** persistence, a **Redis** read‑through cache,
-and two **background tasks**.
+**JWT authentication**, **PostgreSQL** persistence, and two **background tasks**.
 
 ### 👥 Two user roles
 | Role | Can do |
@@ -43,8 +42,6 @@ gets **403**, and organizers may only modify events they own.
 ### 🛡️ Reliability features
 - **Anti‑oversell** — bookings lock the event row (`SELECT … FOR UPDATE`) so concurrent
   requests can never sell more tickets than exist.
-- **Redis cache** — `GET /events` and `GET /events/{id}` are cached and auto‑invalidated on
-  any write; if Redis is down the API transparently falls back to the database.
 
 ### 🖥️ Interactive console
 A full visual client for these endpoints is served at the API root **[`/`](/)**.
@@ -60,7 +57,7 @@ tags_metadata = [
         "name": "events",
         "description": "Browse events (any signed‑in user) and manage them "
         "(**organizer‑only**, owner‑scoped). Updates and cancellations trigger the "
-        "attendee‑notification background task. Read endpoints are Redis‑cached.",
+        "attendee‑notification background task.",
     },
     {
         "name": "bookings",

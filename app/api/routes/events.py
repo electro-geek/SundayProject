@@ -3,13 +3,6 @@ from sqlalchemy import select
 from sqlalchemy.orm import Session
 
 from app.api.deps import get_current_user, require_role
-from app.core.cache import (
-    cache_get,
-    cache_set,
-    event_detail_key,
-    event_list_key,
-    invalidate_event_caches,
-)
 from app.db.session import get_db
 from app.models.booking import Booking
 from app.models.event import Event, EventStatus
@@ -41,7 +34,7 @@ def _get_owned_event(event_id: int, db: Session, organizer: User) -> Event:
     description=(
         "List **active** events with pagination (`skip`, `limit`) and optional "
         "case‑insensitive title `search`. Available to any authenticated user "
-        "(organizer or customer). Responses are **Redis‑cached** and invalidated on writes."
+        "(organizer or customer)."
     ),
     response_description="A page of active events ordered by start time.",
 )
@@ -52,25 +45,12 @@ def list_events(
     search: str | None = Query(None, description="Case-insensitive title search"),
     _: User = Depends(get_current_user),
 ):
-    """Browse active events (any authenticated user).
-
-    Read-through cached in Redis; falls back to the DB on a cache miss or if
-    Redis is unavailable. Invalidated whenever events change.
-    """
-    cache_key = event_list_key(skip, limit, search)
-    cached = cache_get(cache_key)
-    if cached is not None:
-        return cached
-
+    """Browse active events (any authenticated user)."""
     stmt = select(Event).where(Event.status == EventStatus.active)
     if search:
         stmt = stmt.where(Event.title.ilike(f"%{search}%"))
     stmt = stmt.order_by(Event.start_time).offset(skip).limit(limit)
-    events = db.scalars(stmt).all()
-
-    result = [EventRead.model_validate(e).model_dump(mode="json") for e in events]
-    cache_set(cache_key, result)
-    return result
+    return list(db.scalars(stmt).all())
 
 
 @router.get(
@@ -79,7 +59,7 @@ def list_events(
     summary="Get a single event",
     description=(
         "Fetch one event by id, including live `available_tickets`. Available to any "
-        "authenticated user. **Redis‑cached** and invalidated on writes/bookings."
+        "authenticated user."
     ),
     response_description="The requested event.",
     responses={404: {"description": "Event not found"}},
@@ -89,18 +69,10 @@ def get_event(
     db: Session = Depends(get_db),
     _: User = Depends(get_current_user),
 ):
-    cache_key = event_detail_key(event_id)
-    cached = cache_get(cache_key)
-    if cached is not None:
-        return cached
-
     event = db.get(Event, event_id)
     if event is None:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Event not found")
-
-    result = EventRead.model_validate(event).model_dump(mode="json")
-    cache_set(cache_key, result)
-    return result
+    return event
 
 
 @router.post(
@@ -133,9 +105,6 @@ def create_event(
     db.add(event)
     db.commit()
     db.refresh(event)
-
-    # A new active event must appear in cached listings.
-    invalidate_event_caches()
     return event
 
 
@@ -185,9 +154,6 @@ def update_event(
     db.commit()
     db.refresh(event)
 
-    # Event fields changed -> drop stale listings and this event's detail cache.
-    invalidate_event_caches(event.id)
-
     # Background Task 2: notify customers who booked this event.
     background_tasks.add_task(notify_event_update, event.id, list(updates.keys()))
     return event
@@ -218,9 +184,6 @@ def cancel_event(
     event = _get_owned_event(event_id, db, organizer)
     event.status = EventStatus.cancelled
     db.commit()
-
-    # Cancelled events drop out of the active listings.
-    invalidate_event_caches(event.id)
 
     background_tasks.add_task(notify_event_update, event.id, ["status: cancelled"])
     return {"detail": "Event cancelled"}
